@@ -37,7 +37,8 @@ ui <- dashboardPage(
               h3(textOutput("username")),
               plotOutput("modeFrequencyPie"),
               plotOutput("dayUsageBar"),
-              plotOutput("dayUsageRatio")
+              plotOutput("dayUsageRatio"),
+              plotOutput("trend")
               
       )
     )
@@ -69,6 +70,10 @@ server <- function(input, output) {
     d.getDayUsageRatio(input$selectedPerson)
   })
   
+  output$trend <- renderPlot({
+    d.getTrend(input$selectedPerson, input$typeSelection)
+  })
+  
   
   
   
@@ -85,6 +90,7 @@ server <- function(input, output) {
   output$dayUsageRatio_All <- renderPlot({
     d.getDayUsageRatio_All()
   })
+  
   
 }
 

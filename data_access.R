@@ -66,6 +66,15 @@ h_toDay <- function(d) {
   return (d)
 }
 
+h_toUnix <- function(d) {
+  
+  d["Time"] <- lapply(d["Time"], function(x) {dmy_hm(x, tz=Sys.timezone())})
+  d["Time"] <- lapply(d["Time"], function(x) {format(x, format="%Y-%m-%d")})
+  d["Time"] <- lapply(d["Time"], function(x) {as.numeric(as.POSIXct(x, format="%Y-%m-%d"))})
+  
+  return (d)
+}
+
 ####### HELPERS ########
 ########################
 
@@ -168,6 +177,24 @@ d.getDayUsageRatio_All <- function() {
   return (bar)
 }
 
+# Trend
+d.getTrend <- function(user, typeList) {
+  
+  data <- logs[logs$User == user,]
+  data <- data[data$Type %in% typeList,]
+  
+  data <- h_toUnix(data)
+  
+  data <- rename(count(data, data$Type, data$Time), Type = "data$Type", Time = "data$Time")
+
+  g <- ggplot(data, aes(Time, n, color=Type))
+  
+  bar <- g + geom_line(size=1) +
+    stat_summary(fun.y = "sum", colour = "red", size = 1, geom = "line")
+  
+  return (bar)
+}
+
 ##### DATA ACCESS  #####
 ########################
 
@@ -177,28 +204,10 @@ d.getDayUsageRatio_All <- function() {
 # workspace fourre tout
 
 
-
-data <- h_toDay(data)
-
-
-data <- logs[logs$User == "Renaud Courbis",]
-
-
-data["Time"] <- lapply(data["Time"], function(x) {dmy_hm(x, tz=Sys.timezone())})
-data["Time"] <- lapply(data["Time"], function(x) {format(x, format="%Y-%m-%d")})
-data["Time"] <- lapply(data["Time"], function(x) {as.numeric(as.POSIXct(x, format="%Y-%m-%d"))})
-data <- rename(count(data, data$Type, data$Time), Type = "data$Type", Time = "data$Time")
-data
-
-
-
-g <- ggplot(data, aes(Time, n, color=Type))
-g
-
-bar <- g + geom_line(size=1)
-bar
-
-bar <- g + geom_bar(stat="identity", width = 0.5) +
-  labs(title="Total hourly usage") +
-  theme(axis.text.x = element_text(angle=65, vjust=0.6))
-bar
+# data2 <- data
+# data2 <- aggregate(data2$n, by=list(Time = data2$Time), FUN=sum)
+# data2["Type"] = "Total"
+# data2 <- rename(data2, "n" = "x")
+# 
+# da <- rbind(data, data2)
+# da["isTotal"] <- with(da, ifelse(Type == "Total", 0, 1))
