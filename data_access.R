@@ -190,7 +190,7 @@ d.getTrend <- function(user, typeList) {
   g <- ggplot(data, aes(Time, n, color=Type))
   
   bar <- g + geom_line(size=1) +
-    stat_summary(fun.y = "sum", colour = "red", size = 1, geom = "line")
+    stat_summary(fun.y = "sum",aes(Time,n,col = "Total"), size = 1, geom = "line")
   
   return (bar)
 }
