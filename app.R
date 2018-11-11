@@ -24,7 +24,8 @@ ui <- dashboardPage(
               h3("All users"),
               plotOutput("modeFrequencyPie_All"),
               plotOutput("dayUsageBar_All"),
-              plotOutput("dayUsageRatio_All")
+              plotOutput("dayUsageRatio_All"),
+              plotOutput("reasonPerStatus")
               
               
         ),
@@ -89,6 +90,10 @@ server <- function(input, output) {
   
   output$dayUsageRatio_All <- renderPlot({
     d.getDayUsageRatio_All()
+  })
+  
+  output$reasonPerStatus <- renderPlot({
+    d.getReasonPerStatus()
   })
   
   

@@ -8,12 +8,15 @@ library(scales)
 library(lubridate)
 
 
-
 ########################
 #### INITIALIZATION ####
-logs <- read_delim("../data/logs.csv", 
-                   ";", escape_double = FALSE, locale = locale(encoding = "ASCII"), 
-                   trim_ws = TRUE)
+#logs <- read_delim("../data/logs.csv", 
+#                   ";", escape_double = FALSE, locale = locale(encoding = "ASCII"), 
+#                   trim_ws = TRUE)
+
+logs <- logs
+survey <- surveydataece
+
 
 # Special characters
 logs$User <- gsub("\u000e" , "\351" ,logs$User)
@@ -195,6 +198,44 @@ d.getTrend <- function(user, typeList) {
   return (bar)
 }
 
+# Reason per status
+d.getReasonPerStatus <- function() {
+  
+  data <- cbind(survey[, 51:56], survey[, 9])
+  
+  dataSingle <- data[data$`Family status` == "Single", 1:6]
+  dataMarried <- data[data$`Family status` == "Married", 1:6]
+  
+  dataSingle <- colSums(!is.na(dataSingle))
+  dataSingle <- data.frame(dataSingle)
+  dataSingle["Status"] <- "Single"
+  dataSingle <- setNames(cbind(rownames(dataSingle), dataSingle, row.names = NULL), 
+                    c("Reason", "Count", "Status"))
+  
+  dataMarried <- colSums(!is.na(dataMarried))
+  dataMarried <- data.frame(dataMarried)
+  dataMarried["Status"] <- "Married"
+  dataMarried <- setNames(cbind(rownames(dataMarried), dataMarried, row.names = NULL), 
+                     c("Reason", "Count", "Status"))
+  
+  data <- rbind(dataSingle, dataMarried)
+
+  plot <- ggplot(data, aes(x = Reason, y=Count, fill = Status)) +
+            geom_bar(data=subset(data, Status=="Single"), stat="identity") + 
+            geom_bar(data=subset(data, Status=="Married"), stat="identity", aes(y=Count*(-1))) + 
+            scale_y_continuous(
+              breaks = seq(-50, 50, 5), 
+              labels = as.character(c(seq(50, 0, -5), seq(5, 50, 5)))) +
+            coord_flip() +
+            labs(title="Reason to quit per family status") +
+            theme(
+              plot.title = element_text(hjust = .5), 
+              axis.ticks = element_blank()) +
+            scale_fill_brewer(palette = "Dark2")
+  
+  return (plot)
+}
+
 ##### DATA ACCESS  #####
 ########################
 
@@ -211,3 +252,64 @@ d.getTrend <- function(user, typeList) {
 # 
 # da <- rbind(data, data2)
 # da["isTotal"] <- with(da, ifelse(Type == "Total", 0, 1))
+# 
+# data <- surveydataece
+# data <- data[, 51:56]
+# data
+# 
+# data2 <- colSums(!is.na(data))
+# data3 <- data.frame(data2)
+# 
+# data3 <- setNames(cbind(rownames(data3), data3, row.names = NULL), 
+#          c("Reason", "Value"))
+# 
+# data3
+# 
+# # , aes(x="", y=Count, fill=Type)
+# bp <- ggplot(data3, aes(x="", y=Value, fill=Reason)) + geom_bar(width= 1, stat="identity")
+# pie <- bp + coord_polar("y", start=0)
+# pie
+# 
+# ##
+# data4 <- surveydataece[, 9]
+# data5 <- cbind(data, data4)
+# data6 <- colSums(!is.na(data))
+# data6
+# 
+# data7 <- data5[data5$`Family status` == "Single", 1:6]
+# 
+# data10 <- data5[data5$`Family status` == "Married", 1:6]
+# 
+# data8 <- colSums(!is.na(data7))
+# data9 <- data.frame(data8)
+# data9["Status"] <- "Single"
+# data9 <- setNames(cbind(rownames(data9), data9, row.names = NULL), 
+#                    c("Reason", "Count", "Status"))
+# 
+# 
+# data11 <- colSums(!is.na(data10))
+# data12 <- data.frame(data11)
+# data12["Status"] <- "Married"
+# data12 <- setNames(cbind(rownames(data12), data12, row.names = NULL), 
+#                   c("Reason", "Count", "Status"))
+# 
+# data13 <- rbind(data9, data12)
+# 
+# data14 <- setNames(cbind(rownames(data13), data13, row.names = NULL), 
+#                   c("Reason", "Count", "Status"))
+# 
+# # bp <- ggplot(data3, aes(x="", y=Value, fill=Reason)) + geom_bar(width= 1, stat="identity")
+# # pie <- bp + coord_polar("y", start=0)
+# # pie
+# data13
+# 
+# ggplot(data13, aes(x = Reason, y=Count, fill = Status)) +
+#   geom_bar(data=subset(data13, Status=="Single"), stat="identity") + 
+#   geom_bar(data=subset(data13, Status=="Married"), stat="identity", aes(y=Count*(-1))) + 
+#   scale_y_continuous(breaks = seq(-50, 50, 5), 
+#                      labels = as.character(c(seq(50, 0, -5), seq(5, 50, 5)))) +
+#   coord_flip() +
+#   labs(title="Reason to quit per family status") +
+#   theme(plot.title = element_text(hjust = .5), 
+#         axis.ticks = element_blank()) +
+#   scale_fill_brewer(palette = "Dark2")
