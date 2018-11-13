@@ -14,6 +14,8 @@ library(data.table)
 
 ########################
 #### INITIALIZATION ####
+
+# Read the two files in "../data/" folder
 logs <- read_delim("../data/logs.csv", 
                    ";", escape_double = FALSE, locale = locale(encoding = "ASCII"), 
                    trim_ws = TRUE)
@@ -44,7 +46,10 @@ logsByType <- logsByType[order(logsByType$User),]
 
 logsByType$User
 
+# Modes
 TypeList<-unique(logsTemp$Type)
+
+# Unique users
 d.uniqueUsers <- unique(logs$User)
 
 ##### PRECOMPUTING #####
@@ -182,72 +187,13 @@ d.getDayUsageRatio_All <- function() {
   return (bar)
 }
 
-##### DATA ACCESS  #####
-########################
-
-
-
-
-# workspace fourre tout
-
-
-
-#data <- h_toDay(data)
-
-
-#data <- logs[logs$User == "Renaud Courbis",]
-
-
-#data["Time"] <- lapply(data["Time"], function(x) {dmy_hm(x, tz=Sys.timezone())})
-#data["Time"] <- lapply(data["Time"], function(x) {format(x, format="%Y-%m-%d")})
-#data["Time"] <- lapply(data["Time"], function(x) {as.numeric(as.POSIXct(x, format="%Y-%m-%d"))})
-#data <- rename(count(data, data$Type, data$Time), Type = "data$Type", Time = "data$Time")
-#data
-
-
-
-#g <- ggplot(data, aes(Time, n, color=Type))
-#g
-
-#bar <- g + geom_line(size=1) + stat_summary(fun.y = "sum",aes(Time,n,col = "sum"), size = 1, geom = "line") 
-#bar
-
-#bar <- g + geom_bar(stat="identity", width = 0.5) +
-#  labs(title="Total hourly usage") +
-#  theme(axis.text.x = element_text(angle=65, vjust=0.6))
-
-#bar
-
-
-
-
-#moyenne age
-#nombre de cigarette par user ? 
-
-#library(ggmap)
-#install.packages("leaflet", dependencies = TRUE)
-
-
-
-#lyon=c(lon=4.842223 ,lat=45.759723 )
-#lyon_map=get_map(location=lyon)
-#ggmap(lyon_map)
-
-#ggmap(lyon_map_3)+
-#  geom_point(data=data_sp, 
-#             aes(x=lon,y=lat), col="red", size=2)
-
 # Définition d'un nouvel icône
 mapUser <- function(user,typeList){
-#Smoking <- makeIcon(
-  #iconUrl = "smoking.png",
-  #iconWidth = 40, iconHeight = 40)
+
   data <- logs[logs$User == user,]
   data <- data[data$Type %in% typeList,]
   m <- leaflet() %>%
   addTiles() %>%
- # setView(lng = 2.292551, lat = 48.858255, zoom = 16) %>%
-  # addMarkers(lng = data$Longitude, lat = data$Latitude , color="red")
   addCircles(lng = data$Longitude, lat = data$Latitude , color="red",fill = TRUE, opacity = 0.3 , weight=12 ,fillColor = "red",
              fillOpacity = 0.2)
   
@@ -255,15 +201,11 @@ return(m)
 }
 
 mapAll <- function(typeList){
-  #Smoking <- makeIcon(
-  #iconUrl = "smoking.png",
-  #iconWidth = 40, iconHeight = 40)
+
   data <- logs
   data <- data[data$Type %in% typeList,]
   m <- leaflet() %>%
     addTiles() %>%
-    # setView(lng = 2.292551, lat = 48.858255, zoom = 16) %>%
-    # addMarkers(lng = data$Longitude, lat = data$Latitude , color="red")
     addCircles(lng = data$Longitude, lat = data$Latitude , fill = TRUE,color="red" ,opacity = 0.3, weight=12,fillColor = "red",
                fillOpacity = 0.2)
   
@@ -330,9 +272,11 @@ d.getTrend <- function(user, typeList) {
   data <- logs[logs$User == user,]
   data <- data[data$Type %in% typeList,]
   
-  data <- h_toUnix(data)
+  data <- h_toUnix(data) # get unix timestamp
   
   data <- rename(count(data, data$Type, data$Time), Type = "data$Type", Time = "data$Time")
+  
+  # convert to read date (for labels)
   data["Day"] <- lapply(data["Time"], function(x) {as.POSIXct(x, format="%Y-%m-%d", origin="1970-01-01")})
   
   
@@ -387,89 +331,86 @@ d.getReasonPerStatus <- function() {
   return (plot)
 }
 
-
-
-
-
+# Correlation matrix
 CorMatrix<- function(){
 
-dtTocor <- survey[,c("health.condition.None",
-          "method.quit.smoking.nothing",
-          "main.motivator.health",
-          "main.motivator.money",
-          
-          "main.motivator.smellsbad",
-          "main.motivator.socialacceptability",
-
-          "Smoking is relaxing for me",
-          "Smoking is enjoyable for me",
-          "Smoking helps me escape reality for a while",	
-          "I enjoy smoking with friends/peers/colleagues (social smoking)",	
-          "I smoke because my friends/partner/important others smoke",
-          "Smoking helps me concentrate",
-          "Smoking decreases my appetite",	
-          "I smoke as a way of punishing myself/others (parents, partner etc.)",	
-          "The first cigarette in the morning",
-          "Cigarette with coffee",
-          "Cigarette with alcohol",
-          "Cigarette after meal",
-          "Cigarette with a group of friends / colleagues"
-          )]
-
-dtTocor[!is.na(dtTocor)]<-1
-dtTocor[is.na(dtTocor)]<-0
-
-dtTocor[] <- lapply(dtTocor, function(x) as.numeric(as.character(x)))
-
-setnames(dtTocor,c("health.condition.None",
-                     "method.quit.smoking.nothing",
-                     "main.motivator.health",
-                     "main.motivator.money",
-                     
-                     "main.motivator.smellsbad",
-                     "main.motivator.socialacceptability",
-                     
-                     "Smoking is relaxing for me",
-                     "Smoking is enjoyable for me",
-                     "Smoking helps me escape reality for a while",	
-                     "I enjoy smoking with friends/peers/colleagues (social smoking)",	
-                     "I smoke because my friends/partner/important others smoke",
-                     "Smoking helps me concentrate",
-                     "Smoking decreases my appetite",	
-                     "I smoke as a way of punishing myself/others (parents, partner etc.)",	
-                     "The first cigarette in the morning",
-                     "Cigarette with coffee",
-                     "Cigarette with alcohol",
-                     "Cigarette after meal",
-                     "Cigarette with a group of friends / colleagues"
-),c("healthCondition",
-    "MtDquit",
-    "health",
-    "money",
-    
-    "smellsbad",
-    "socialacceptability",
-    
-    "relaxing",
-    "enjoyable",
-    "escape reality",	
-    "social smoking",	
-    "becauseOfFriends",
-    "concentrate",
-    "decreases appetite",	
-    "punishing",	
-    "morning",
-    "coffee",
-    "alcohol",
-    "meal",
-    "friends"
-))
-
-
-
-
-return(ggcorrplot(cor(dtTocor), hc.order = TRUE, type = "lower",
-           lab = T  , show.legend = T ,legend.title = T,lab_size = 2.4) )
+  dtTocor <- survey[,c("health.condition.None",
+            "method.quit.smoking.nothing",
+            "main.motivator.health",
+            "main.motivator.money",
+            
+            "main.motivator.smellsbad",
+            "main.motivator.socialacceptability",
+  
+            "Smoking is relaxing for me",
+            "Smoking is enjoyable for me",
+            "Smoking helps me escape reality for a while",	
+            "I enjoy smoking with friends/peers/colleagues (social smoking)",	
+            "I smoke because my friends/partner/important others smoke",
+            "Smoking helps me concentrate",
+            "Smoking decreases my appetite",	
+            "I smoke as a way of punishing myself/others (parents, partner etc.)",	
+            "The first cigarette in the morning",
+            "Cigarette with coffee",
+            "Cigarette with alcohol",
+            "Cigarette after meal",
+            "Cigarette with a group of friends / colleagues"
+            )]
+  
+  dtTocor[!is.na(dtTocor)]<-1
+  dtTocor[is.na(dtTocor)]<-0
+  
+  dtTocor[] <- lapply(dtTocor, function(x) as.numeric(as.character(x)))
+  
+  setnames(dtTocor,c("health.condition.None",
+                       "method.quit.smoking.nothing",
+                       "main.motivator.health",
+                       "main.motivator.money",
+                       
+                       "main.motivator.smellsbad",
+                       "main.motivator.socialacceptability",
+                       
+                       "Smoking is relaxing for me",
+                       "Smoking is enjoyable for me",
+                       "Smoking helps me escape reality for a while",	
+                       "I enjoy smoking with friends/peers/colleagues (social smoking)",	
+                       "I smoke because my friends/partner/important others smoke",
+                       "Smoking helps me concentrate",
+                       "Smoking decreases my appetite",	
+                       "I smoke as a way of punishing myself/others (parents, partner etc.)",	
+                       "The first cigarette in the morning",
+                       "Cigarette with coffee",
+                       "Cigarette with alcohol",
+                       "Cigarette after meal",
+                       "Cigarette with a group of friends / colleagues"
+  ),c("healthCondition",
+      "MtDquit",
+      "health",
+      "money",
+      
+      "smellsbad",
+      "socialacceptability",
+      
+      "relaxing",
+      "enjoyable",
+      "escape reality",	
+      "social smoking",	
+      "becauseOfFriends",
+      "concentrate",
+      "decreases appetite",	
+      "punishing",	
+      "morning",
+      "coffee",
+      "alcohol",
+      "meal",
+      "friends"
+  ))
+  
+  
+  
+  
+  return(ggcorrplot(cor(dtTocor), hc.order = TRUE, type = "lower",
+             lab = T  , show.legend = T ,legend.title = T,lab_size = 2.4) )
 
 }
 
@@ -495,4 +436,5 @@ d.getCigsAlcohol <- function() {
   
 }
 
-
+##### DATA ACCESS  #####
+########################
