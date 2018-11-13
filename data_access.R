@@ -333,11 +333,16 @@ d.getTrend <- function(user, typeList) {
   data <- h_toUnix(data)
   
   data <- rename(count(data, data$Type, data$Time), Type = "data$Type", Time = "data$Time")
+  data["Day"] <- lapply(data["Time"], function(x) {as.POSIXct(x, format="%Y-%m-%d", origin="1970-01-01")})
   
-  g <- ggplot(data, aes(Time, n, color=Type))
+  
+  g <- ggplot(data, aes(Day, n, color=Type))
   
   bar <- g + geom_line(size=1) +
-    stat_summary(fun.y = "sum",aes(Time,n,col = "Total"), size = 1, geom = "line")
+    stat_summary(fun.y = "sum",aes(Day,n,col = "Total"), size = 1, geom = "line") +
+    scale_x_datetime(date_breaks="15 days") +
+    labs(title="Usage per day") +
+    theme(axis.text.x = element_text(angle=65, vjust=0.6))
   
   return (bar)
 }
@@ -489,3 +494,5 @@ d.getCigsAlcohol <- function() {
   return (bar)
   
 }
+
+

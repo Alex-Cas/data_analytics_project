@@ -37,7 +37,7 @@ ui <- dashboardPage(
               ),
               
               tabBox(
-                title = "Garphs Tabs",
+                title = "Graphs Tabs",
                 
                   # The id lets us use input$tabset1 on the server to find the current tab
                   id = "tabset1", height  = "40%",
@@ -91,7 +91,7 @@ ui <- dashboardPage(
               
                 
               tabBox(
-                title = "Garphs Tabs",height  = "40%",
+                title = "Graphs Tabs",height  = "40%",
                 
                 # The id lets us use input$tabset1 on the server to find the current tab
                 id = "tabset2", 
