@@ -366,19 +366,23 @@ d.getReasonPerStatus <- function() {
   dataSingle <- data.frame(dataSingle)
   dataSingle["Status"] <- "Single"
   dataSingle <- setNames(cbind(rownames(dataSingle), dataSingle, row.names = NULL), 
-                         c("Reason", "Count", "Status"))
+                         c("Reason", "Percentage", "Status"))
+  dataSingle$Percentage <- dataSingle$Percentage / sum(dataSingle$Percentage) * 100
+  
   
   dataMarried <- colSums(!is.na(dataMarried))
   dataMarried <- data.frame(dataMarried)
   dataMarried["Status"] <- "Married"
   dataMarried <- setNames(cbind(rownames(dataMarried), dataMarried, row.names = NULL), 
-                          c("Reason", "Count", "Status"))
+                          c("Reason", "Percentage", "Status"))
+  dataMarried$Percentage <- dataMarried$Percentage / sum(dataMarried$Percentage) * 100
+  
   
   data <- rbind(dataSingle, dataMarried)
   
-  plot <- ggplot(data, aes(x = Reason, y=Count, fill = Status)) +
+  plot <- ggplot(data, aes(x = Reason, y=Percentage, fill = Status)) +
     geom_bar(data=subset(data, Status=="Single"), stat="identity") + 
-    geom_bar(data=subset(data, Status=="Married"), stat="identity", aes(y=Count*(-1))) + 
+    geom_bar(data=subset(data, Status=="Married"), stat="identity", aes(y=Percentage*(-1))) + 
     scale_y_continuous(
       breaks = seq(-50, 50, 5), 
       labels = as.character(c(seq(50, 0, -5), seq(5, 50, 5)))) +
@@ -398,8 +402,42 @@ d.getReasonPerStatus <- function() {
 
 
 
+data <- cbind(survey[, 51:56], survey[, 9])
+
+dataSingle <- data[data$`Family status` == "Single", 1:6]
+dataMarried <- data[data$`Family status` == "Married", 1:6]
+
+dataSingle <- colSums(!is.na(dataSingle))
+dataSingle <- data.frame(dataSingle)
+dataSingle["Status"] <- "Single"
+dataSingle <- setNames(cbind(rownames(dataSingle), dataSingle, row.names = NULL), 
+                       c("Reason", "Count", "Status"))
+dataSingle$Count <- dataSingle$Count / sum(dataSingle$Count) * 100
 
 
+dataMarried <- colSums(!is.na(dataMarried))
+dataMarried <- data.frame(dataMarried)
+dataMarried["Status"] <- "Married"
+dataMarried <- setNames(cbind(rownames(dataMarried), dataMarried, row.names = NULL), 
+                        c("Reason", "Count", "Status"))
+dataMarried$Count <- dataMarried$Count / sum(dataMarried$Count) * 100
+
+data <- rbind(dataSingle, dataMarried)
+
+plot <- ggplot(data, aes(x = Reason, y=Count, fill = Status)) +
+  geom_bar(data=subset(data, Status=="Single"), stat="identity") + 
+  geom_bar(data=subset(data, Status=="Married"), stat="identity", aes(y=Count*(-1))) + 
+  scale_y_continuous(
+    breaks = seq(-50, 50, 5), 
+    labels = as.character(c(seq(50, 0, -5), seq(5, 50, 5)))) +
+  coord_flip() +
+  labs(title="Reason to quit per family status") +
+  theme(
+    plot.title = element_text(hjust = .5), 
+    axis.ticks = element_blank()) +
+  scale_fill_brewer(palette = "Dark2")
+
+plot
 
 
 
