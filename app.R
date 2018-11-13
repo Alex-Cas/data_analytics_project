@@ -41,8 +41,10 @@ ui <- dashboardPage(
                 tabPanel("Tab1", plotOutput("modeFrequencyPie_All")),
                 tabPanel("Tab2", plotOutput("dayUsageBar_All")),
                 tabPanel("Tab3", plotOutput("reasonPerStatus")),
-                tabPanel("Tab4", leafletOutput("mapSmokeAll")
-              ))
+                tabPanel("Tab4", leafletOutput("mapSmokeAll")),
+                tabPanel("Cigs - Alcohol", plotOutput("cigsAlcohol"))
+                
+              )
               
               
               #NplotOutput("modeFrequencyPie_All"),
@@ -173,6 +175,10 @@ server <- function(input, output) {
       AgeAverage(), "Age Average", icon = icon("list"),
       color = "purple"
     )
+  })
+  
+  output$cigsAlcohol <- renderPlot({
+    d.getCigsAlcohol()
   })
   
 

@@ -396,48 +396,21 @@ d.getReasonPerStatus <- function() {
   return (plot)
 }
 
-
-
-
-
-
-
-data <- cbind(survey[, 51:56], survey[, 9])
-
-dataSingle <- data[data$`Family status` == "Single", 1:6]
-dataMarried <- data[data$`Family status` == "Married", 1:6]
-
-dataSingle <- colSums(!is.na(dataSingle))
-dataSingle <- data.frame(dataSingle)
-dataSingle["Status"] <- "Single"
-dataSingle <- setNames(cbind(rownames(dataSingle), dataSingle, row.names = NULL), 
-                       c("Reason", "Count", "Status"))
-dataSingle$Count <- dataSingle$Count / sum(dataSingle$Count) * 100
-
-
-dataMarried <- colSums(!is.na(dataMarried))
-dataMarried <- data.frame(dataMarried)
-dataMarried["Status"] <- "Married"
-dataMarried <- setNames(cbind(rownames(dataMarried), dataMarried, row.names = NULL), 
-                        c("Reason", "Count", "Status"))
-dataMarried$Count <- dataMarried$Count / sum(dataMarried$Count) * 100
-
-data <- rbind(dataSingle, dataMarried)
-
-plot <- ggplot(data, aes(x = Reason, y=Count, fill = Status)) +
-  geom_bar(data=subset(data, Status=="Single"), stat="identity") + 
-  geom_bar(data=subset(data, Status=="Married"), stat="identity", aes(y=Count*(-1))) + 
-  scale_y_continuous(
-    breaks = seq(-50, 50, 5), 
-    labels = as.character(c(seq(50, 0, -5), seq(5, 50, 5)))) +
-  coord_flip() +
-  labs(title="Reason to quit per family status") +
-  theme(
-    plot.title = element_text(hjust = .5), 
-    axis.ticks = element_blank()) +
-  scale_fill_brewer(palette = "Dark2")
-
-plot
-
-
+# Cigs - Alcohol
+d.getCigsAlcohol <- function() {
+  
+  data <- data.frame(survey[1:35, c(62, 21)])
+  names(data) <- c("Alcohol", "Cigs per day")
+  
+  data$Alcohol[grepl("Excessive", data$Alcohol)] <- "Excessive (10+)"
+  data$Alcohol[grepl("Regular", data$Alcohol)] <- "Regular (5-10)"
+  data$Alcohol[grepl("Moderate", data$Alcohol)] <- "Moderate (2-5)"
+  data$Alcohol[grepl("Zero", data$Alcohol)] <- "Zero or low (1-2)"
+  data$Alcohol <- factor(data$Alcohol, levels=c("Zero or low (1-2)", "Moderate (2-5)", "Regular (5-10)", "Excessive (10+)"))
+  
+  g <- ggplot(data, aes(x = Alcohol, y = ..count.., fill = `Cigs per day`))
+  bar <- g + geom_bar()
+  
+  return (bar)
+}
 
