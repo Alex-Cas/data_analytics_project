@@ -7,6 +7,9 @@ library(dplyr)
 library(scales)
 library(lubridate)
 library(readxl)
+library(leaflet)
+library(ggcorrplot)
+library(data.table)
 
 
 ########################
@@ -224,7 +227,7 @@ d.getDayUsageRatio_All <- function() {
 #library(ggmap)
 #install.packages("leaflet", dependencies = TRUE)
 
-library(leaflet)
+
 
 #lyon=c(lon=4.842223 ,lat=45.759723 )
 #lyon_map=get_map(location=lyon)
@@ -272,21 +275,8 @@ mapAll <- function(typeList){
 
 userName <-unique(logs$User)
 surveyName <- survey$Name
-
-
-
 UserAndSurvey<-surveyName[surveyName %in% userName]
-
 dataSurveyUser <-survey[survey$Name %in% UserAndSurvey,]
-
-
-
-#table recap
-#Proportion Homme femme
-#proposer un recap par user
-#
-
-
 names(dataSurveyUser)
 
 
@@ -366,23 +356,19 @@ d.getReasonPerStatus <- function() {
   dataSingle <- data.frame(dataSingle)
   dataSingle["Status"] <- "Single"
   dataSingle <- setNames(cbind(rownames(dataSingle), dataSingle, row.names = NULL), 
-                         c("Reason", "Percentage", "Status"))
-  dataSingle$Percentage <- dataSingle$Percentage / sum(dataSingle$Percentage) * 100
-  
+                         c("Reason", "Count", "Status"))
   
   dataMarried <- colSums(!is.na(dataMarried))
   dataMarried <- data.frame(dataMarried)
   dataMarried["Status"] <- "Married"
   dataMarried <- setNames(cbind(rownames(dataMarried), dataMarried, row.names = NULL), 
-                          c("Reason", "Percentage", "Status"))
-  dataMarried$Percentage <- dataMarried$Percentage / sum(dataMarried$Percentage) * 100
-  
+                          c("Reason", "Count", "Status"))
   
   data <- rbind(dataSingle, dataMarried)
   
-  plot <- ggplot(data, aes(x = Reason, y=Percentage, fill = Status)) +
+  plot <- ggplot(data, aes(x = Reason, y=Count, fill = Status)) +
     geom_bar(data=subset(data, Status=="Single"), stat="identity") + 
-    geom_bar(data=subset(data, Status=="Married"), stat="identity", aes(y=Percentage*(-1))) + 
+    geom_bar(data=subset(data, Status=="Married"), stat="identity", aes(y=Count*(-1))) + 
     scale_y_continuous(
       breaks = seq(-50, 50, 5), 
       labels = as.character(c(seq(50, 0, -5), seq(5, 50, 5)))) +
@@ -396,7 +382,96 @@ d.getReasonPerStatus <- function() {
   return (plot)
 }
 
+
+
+
+
+CorMatrix<- function(){
+
+dtTocor <- survey[,c("health.condition.None",
+          "method.quit.smoking.nothing",
+          "main.motivator.health",
+          "main.motivator.money",
+          
+          "main.motivator.smellsbad",
+          "main.motivator.socialacceptability",
+
+          "Smoking is relaxing for me",
+          "Smoking is enjoyable for me",
+          "Smoking helps me escape reality for a while",	
+          "I enjoy smoking with friends/peers/colleagues (social smoking)",	
+          "I smoke because my friends/partner/important others smoke",
+          "Smoking helps me concentrate",
+          "Smoking decreases my appetite",	
+          "I smoke as a way of punishing myself/others (parents, partner etc.)",	
+          "The first cigarette in the morning",
+          "Cigarette with coffee",
+          "Cigarette with alcohol",
+          "Cigarette after meal",
+          "Cigarette with a group of friends / colleagues"
+          )]
+
+dtTocor[!is.na(dtTocor)]<-1
+dtTocor[is.na(dtTocor)]<-0
+
+dtTocor[] <- lapply(dtTocor, function(x) as.numeric(as.character(x)))
+
+setnames(dtTocor,c("health.condition.None",
+                     "method.quit.smoking.nothing",
+                     "main.motivator.health",
+                     "main.motivator.money",
+                     
+                     "main.motivator.smellsbad",
+                     "main.motivator.socialacceptability",
+                     
+                     "Smoking is relaxing for me",
+                     "Smoking is enjoyable for me",
+                     "Smoking helps me escape reality for a while",	
+                     "I enjoy smoking with friends/peers/colleagues (social smoking)",	
+                     "I smoke because my friends/partner/important others smoke",
+                     "Smoking helps me concentrate",
+                     "Smoking decreases my appetite",	
+                     "I smoke as a way of punishing myself/others (parents, partner etc.)",	
+                     "The first cigarette in the morning",
+                     "Cigarette with coffee",
+                     "Cigarette with alcohol",
+                     "Cigarette after meal",
+                     "Cigarette with a group of friends / colleagues"
+),c("healthCondition",
+    "MtDquit",
+    "health",
+    "money",
+    
+    "smellsbad",
+    "socialacceptability",
+    
+    "relaxing",
+    "enjoyable",
+    "escape reality",	
+    "social smoking",	
+    "becauseOfFriends",
+    "concentrate",
+    "decreases appetite",	
+    "punishing",	
+    "morning",
+    "coffee",
+    "alcohol",
+    "meal",
+    "friends"
+))
+
+
+
+
+return(ggcorrplot(cor(dtTocor), hc.order = TRUE, type = "lower",
+           lab = T  , show.legend = T ,legend.title = T,lab_size = 2.4) )
+
+}
+
+
+
 # Cigs - Alcohol
+
 d.getCigsAlcohol <- function() {
   
   data <- data.frame(survey[1:35, c(62, 21)])
@@ -412,5 +487,5 @@ d.getCigsAlcohol <- function() {
   bar <- g + geom_bar()
   
   return (bar)
+  
 }
-

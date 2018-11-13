@@ -21,7 +21,7 @@ ui <- dashboardPage(
       tabItem("allUsers", 
               
               fluidRow(
-                
+                h3("All users"),
                 
                 
                 # Dynamic valueBoxes
@@ -29,22 +29,29 @@ ui <- dashboardPage(
                 
                 
               ),
+              box(
+                title = "Type Filter", status = "primary", solidHeader = TRUE,
+                collapsible = TRUE,height  = "20%",
+                checkboxGroupInput("typeSelection_All", "Type filter:",
+                                   TypeList,selected = TypeList)
+              ),
               
-              checkboxGroupInput("typeSelection_All", "Type filter:",
-                                 TypeList,selected = TypeList),
-              
-              h3("All users"),
               tabBox(
                 title = "Garphs Tabs",
-                # The id lets us use input$tabset1 on the server to find the current tab
-                id = "tabset1", height = "250px",
-                tabPanel("Tab1", plotOutput("modeFrequencyPie_All")),
-                tabPanel("Tab2", plotOutput("dayUsageBar_All")),
-                tabPanel("Tab3", plotOutput("reasonPerStatus")),
-                tabPanel("Tab4", leafletOutput("mapSmokeAll")),
-                tabPanel("Cigs - Alcohol", plotOutput("cigsAlcohol"))
                 
-              )
+                  # The id lets us use input$tabset1 on the server to find the current tab
+                  id = "tabset1", height  = "40%",
+                  tabPanel("Mode Frequency", plotOutput("modeFrequencyPie_All")),
+                  tabPanel("Usage per Hour", plotOutput("dayUsageBar_All")),
+                  tabPanel("Reasons per Status", plotOutput("reasonPerStatus")),
+                  tabPanel("Localisation Usage", leafletOutput("mapSmokeAll")),
+                  tabPanel("Correlations", plotOutput("Cor")),
+                  tabPanel("Cigs - Alcohol", plotOutput("cigsAlcohol"))
+                  )
+                
+              
+              
+              
               
               
               #NplotOutput("modeFrequencyPie_All"),
@@ -57,6 +64,8 @@ ui <- dashboardPage(
               
         ),
       tabItem("singleUser", 
+              
+              h3(textOutput("username")),
               fluidRow(
                 
                 
@@ -72,17 +81,24 @@ ui <- dashboardPage(
               
               selectInput("selectedPerson", "Pick a user:",
                           choices=d.uniqueUsers),
+              
+              box(
+                title = "Type Filter", status = "primary", solidHeader = TRUE,
+                collapsible = TRUE,height  = "20%",
               checkboxGroupInput("typeSelection", "Type filter:",
-                                 TypeList ,selected = TypeList),
-              h3(textOutput("username")),
+                                 TypeList ,selected = TypeList)),
+              
+              
+                
               tabBox(
-                title = "Garphs Tabs",
+                title = "Garphs Tabs",height  = "40%",
+                
                 # The id lets us use input$tabset1 on the server to find the current tab
-                id = "tabset2", height = "250px",
-                tabPanel("Tab1",plotOutput("modeFrequencyPie")),
-                tabPanel("Tab2",plotOutput("dayUsageBar")),
-                tabPanel("Tab3",plotOutput("trend")),
-                tabPanel("Tab4",leafletOutput("mapSmokeUser"))
+                id = "tabset2", 
+                tabPanel("Mode Frequency",plotOutput("modeFrequencyPie")),
+                tabPanel("Usage per Hour",plotOutput("dayUsageBar")),
+                tabPanel("Usage per Day",plotOutput("trend")),
+                tabPanel("Localisation Usage",leafletOutput("mapSmokeUser"))
                 )
               
              
@@ -129,22 +145,22 @@ server <- function(input, output) {
   
   output$Gender <- renderValueBox({
     valueBox(
-      getGender(input$selectedPerson), "Gender" ,icon = icon("trangender"),
-      color = "purple"
+      getGender(input$selectedPerson), "Gender" ,icon = icon(tolower(getGender(input$selectedPerson))),
+      color = "blue"
     )
   })
   
   output$Family <- renderValueBox({
     valueBox(
       getFamily(input$selectedPerson), "Family Status" ,icon = icon("users"),
-      color = "purple"
+      color = "green"
     )
   })
   
   output$Started <- renderValueBox({
     valueBox(
-      getStarted(input$selectedPerson), "Started Date" ,icon = icon("clock"),
-      color = "purple"
+      getStarted(input$selectedPerson), "Started Date" ,icon = icon("calendar"),
+      color = "orange"
     )
   })
   
@@ -162,6 +178,7 @@ server <- function(input, output) {
   output$reasonPerStatus <- renderPlot({
     d.getReasonPerStatus()
   })
+  
 
   
 
@@ -177,7 +194,9 @@ server <- function(input, output) {
     )
   })
   
-  output$cigsAlcohol <- renderPlot({
+  output$Cor<- renderPlot({CorMatrix()})
+
+    output$cigsAlcohol <- renderPlot({
     d.getCigsAlcohol()
   })
   
